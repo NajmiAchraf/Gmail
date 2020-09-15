@@ -1,4 +1,5 @@
 from email.message import EmailMessage
+import tkinter as tk
 from tkinter import *
 from tkinter import filedialog, messagebox
 import smtplib
@@ -6,15 +7,17 @@ import pandas as pd
 import time
 import ntpath
 
-
 """
-#### version 0.0.0.1 Beta
+#### version 0.0.0.2 Beta
 
-1. getting start the project with MultiEmailSender script and change it to a GUI application
-
-2. multi testing before launching first beta version, there is couple problems here most fixing them
-
+1. setting scheme's color & organizing widgets
 """
+
+
+
+def SMTPGmail():
+    return smtplib.SMTP_SSL("smtp.gmail.com", 465)
+
 
 def FileDirectionPDF():
     return filedialog.askopenfilenames(
@@ -35,6 +38,24 @@ def FileDirectionCSV():
 def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
+
+
+class HoverButton(tk.Button):
+    def __init__(self, master=None, cnf=None, **kwargs):
+        if cnf is None:
+            cnf = {}
+        cnf = tk._cnfmerge((cnf, kwargs))
+        super(HoverButton, self).__init__(master=master, cnf=cnf, **kwargs)
+        self.DBG = kwargs['background']
+        self.ABG = kwargs['activeback']
+        self.bind_class(self, "<Enter>", self.Enter)
+        self.bind_class(self, "<Leave>", self.Leave)
+
+    def Enter(self, event):
+        self['bg'] = self.ABG
+
+    def Leave(self, event):
+        self['bg'] = self.DBG
 
 
 class ScrolledListbox(Listbox):
@@ -105,26 +126,55 @@ class ScrolledTextbox(Text):
 
 class Gmail:
     __author__ = 'Achraf Najmi'
-    __version__ = '0.0.0.1 Beta'
+    __version__ = '0.0.0.2 Beta'
     __name__ = 'Gmail'
+
+    btn_prm = {'padx': 18,
+               'pady': 1,
+               'bd': 1,
+               'background': '#4d4d4d',
+               'fg': 'white',
+               'bg': '#4d4d4d',
+               'font': ('DejaVu Sans', 18),
+               'width': 4,
+               'height': 1,
+               'relief': 'raised',
+               'activeback': '#3d3d3d',
+               'activebackground': '#2d2d2d',
+               'activeforeground': "white"}
+    lbl_prm = {'fg': 'black',
+               'bg': '#F0F0F0',
+               'font': ('DejaVu Sans', 20),
+               'relief': 'flat'}
+    ent_prm = {'fg': 'black',
+               'bg': 'white',
+               'font': ('DejaVu Sans', 20)}
 
     def __init__(self):
         self.win = Tk()
+
         self.win.title(f'{self.__name__} v{self.__version__}')
+
+        self.win.rowconfigure(0, weight=1)
+        self.win.columnconfigure(0, weight=1)
+
+        self.canvas = Canvas(self.win)
+
         self.connect = False
         self.login = False
         self.first_root = False
 
-        self.canvas0 = Canvas(self.win)
+        self.frame = Frame
 
-        self.button = Button
-        self.buttonS = Button
+        self.button = HoverButton
+        self.buttonS = HoverButton
         self.listpdf = ScrolledListbox
         self.listsend = ScrolledListbox
         self.entry0 = Entry
         self.label0 = Label
         self.label1 = Label
         self.text = ScrolledTextbox
+        self.lblvar = StringVar()
 
         self.data = pd.read_csv
 
@@ -138,48 +188,59 @@ class Gmail:
         self.total = int
 
         try:
-            self.mail = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+            self.gmail = SMTPGmail()
         except Exception:
             pass
 
         self.First_Mainloop()
-        self.win.columnconfigure(0, weight=1)
-        self.win.rowconfigure(0, weight=1)
+
         self.win.mainloop()
 
     def First_Mainloop(self):
-        self.canvas0.destroy()
-        self.canvas0 = Canvas(self.win)
-        self.canvas0.grid(row=0, column=0, sticky=NSEW)
+        self.canvas.destroy()
+        self.canvas = Canvas(self.win)
+
+        self.canvas.grid(row=0, column=0, sticky=NSEW)
+
+        self.canvas.rowconfigure(0, weight=4)
+        self.canvas.rowconfigure(1, weight=4)
+        self.canvas.rowconfigure(2, weight=4)
+        self.canvas.rowconfigure(3, weight=4)
+        self.canvas.columnconfigure(0, weight=1)
+        self.canvas.columnconfigure(1, weight=4)
+
+        self.lblvar = StringVar()
 
         self.CSVFile = []
         self.entry0 = []
         self.label0 = []
         text_lbl = ['Gmail :', 'Password :']
         for ent in range(2):
-            self.entry0.append(Entry(self.canvas0))
-            self.entry0[ent].grid(row=ent, column=1, sticky=NSEW)
-            self.label0.append(Label(self.canvas0, text=text_lbl[ent]))
-            self.label0[ent].grid(row=ent, column=0, sticky=NSEW)
+            self.entry0.append(Entry(self.canvas, **self.ent_prm))
+            self.entry0[ent].grid(row=ent, column=1)
+            self.label0.append(Label(self.canvas, **self.lbl_prm, text=text_lbl[ent]))
+            self.label0[ent].grid(row=ent, column=0)
 
-        self.button = Button(self.canvas0, text="Connect", command=lambda: self.Enter())
-        self.button.grid(row=2, column=0, columnspan=2, sticky=NSEW)
+        self.button = HoverButton(self.canvas, **self.btn_prm, text="Connect", command=lambda: self.Enter())
+        self.button.grid(row=2, column=0, columnspan=2)
 
-        self.label1 = Label(self.canvas0, text="")
-        self.label1.grid(row=3, column=0, columnspan=2, sticky=NSEW)
+        self.label1 = Label(self.canvas, **self.lbl_prm, textvariable=self.lblvar)
+        self.label1.grid(row=3, column=0, columnspan=2)
         self.first_root = True
 
     def Second_Mainloop(self):
-        self.canvas0.destroy()
-        self.canvas0 = Canvas(self.win)
-        self.canvas0.grid(row=0, column=0, sticky=NSEW)
-        self.canvas0.columnconfigure(0, weight=1)
-        self.canvas0.columnconfigure(1, weight=1)
-        self.canvas0.rowconfigure(1, weight=1)
+        self.canvas.destroy()
+        self.canvas = Canvas(self.win)
+
+        self.canvas.grid(row=0, column=0, sticky=NSEW)
+
+        self.canvas.columnconfigure(0, weight=1)
+        self.canvas.columnconfigure(1, weight=1)
+        self.canvas.rowconfigure(1, weight=1)
 
         self.frame = []
         for ol in range(4):
-            self.frame.append(Frame(self.canvas0))
+            self.frame.append(Frame(self.canvas))
             self.frame[ol].grid(row=ol, column=0, sticky=NSEW)
 
         self.frame[1].rowconfigure(1, weight=1)
@@ -192,23 +253,23 @@ class Gmail:
 
         # CSV & PDF label
         self.label0 = []
-        text_lbl = ['Select CSV file', 'Select PDF files']
+        text_lbl = ['CSV file', 'PDF files']
         # buttons add files (.pdf) & (.csv)
         self.button = []
         func_but = [self.AddCSVFiles, self.AddPDFiles]
         ent = 0
         for ku in range(0, 3, 2):
-            self.label0.append(Label(self.frame[ku], text=text_lbl[ent]))
+            self.label0.append(Label(self.frame[ku], **self.lbl_prm, text=text_lbl[ent]))
             self.label0[ent].grid(row=0, column=0, sticky=NSEW)
-            self.button.append(Button(self.frame[ku], text="Click", command=func_but[ent]))
+            self.button.append(HoverButton(self.frame[ku], **self.btn_prm, text="Click", command=func_but[ent]))
             self.button[ent].grid(row=0, column=1)
             ent += 1
 
         # label for imported CSV's file
-        self.labelcsv = Label(self.frame[0])
-        self.labelcsv.grid(row=0, column=2, sticky=NSEW)
+        self.labelcsv = Label(self.frame[0], **self.lbl_prm)
+        self.labelcsv.grid(row=0, column=2)
         # listbox for imported PDF's files
-        self.listpdf = ScrolledListbox(self.frame[2])
+        self.listpdf = ScrolledListbox(self.frame[2], **self.ent_prm, width=5, height=5)
         self.listpdf.grid(row=0, column=2, sticky=NSEW)
         # TODO delete files (.pdf) button
         #######
@@ -216,23 +277,23 @@ class Gmail:
         self.label1 = []
         text_lbl = ['Object :', 'Message :']
         for ko in range(2):
-            self.label1.append(Label(self.frame[1], text=text_lbl[ko]))
+            self.label1.append(Label(self.frame[1], **self.lbl_prm, text=text_lbl[ko]))
             self.label1[ko].grid(row=ko, column=0, sticky=NSEW)
 
         self.entry0 = []
         self.text = []
         for ok in range(1):
-            self.entry0.append(Entry(self.frame[1], width=50))
+            self.entry0.append(Entry(self.frame[1], **self.ent_prm))
             self.entry0[ok].grid(row=0, column=1, sticky=NSEW)
 
-            self.text.append(ScrolledTextbox(self.frame[1], width=5, height=5))
+            self.text.append(ScrolledTextbox(self.frame[1], **self.ent_prm, width=5, height=5))
             self.text[ok].grid(row=1, column=1, sticky=NSEW)
 
         # send : button & listbox
-        self.buttonS = Button(self.frame[3], text='Send', command=self.RunSending)
+        self.buttonS = HoverButton(self.frame[3], **self.btn_prm, text='Send', command=self.RunSending)
         self.buttonS.grid(row=0, column=0, sticky=NSEW)
 
-        self.listsend = ScrolledListbox(self.frame[3])
+        self.listsend = ScrolledListbox(self.frame[3], **self.ent_prm, width=5, height=5)
         self.listsend.grid(row=0, column=1, sticky=NSEW)
 
         self.first_root = False
@@ -258,28 +319,32 @@ class Gmail:
         self.listpdf.see(END)
         print(self.PDFiles)
 
+    def TextLabel(self, var):
+        self.lblvar.set(var)
+
     def Connect(self):
         try:
             if self.first_root:
                 print('Connecting ...')
-                self.label1.configure(text='Connecting ...')
+                self.TextLabel('Connecting ...')
             else:
                 print('Connecting ...')
                 self.listsend.insert(END, 'Connecting ...')
 
-            self.mail = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+            self.gmail = SMTPGmail()
 
             if self.first_root:
                 print('Connected')
-                self.label1.configure(text='Connected')
+                self.TextLabel('Connected')
             else:
                 print('Connected')
                 self.listsend.insert(END, 'Connected')
                 self.listpdf.see(END)
+
             self.connect = True
         except Exception:
             if self.first_root:
-                self.label1.configure(text='Field to connect')
+                self.TextLabel('Field to connect')
                 print('Field to connect, check the internet connexion')
                 messagebox.showwarning(title='Warning!', message='Field to connect, check the internet connexion')
             else:
@@ -292,16 +357,16 @@ class Gmail:
         try:
             if self.first_root:
                 print('Login ...')
-                self.label1.configure(text='Login ...')
+                self.TextLabel('Login ...')
             else:
                 print('Login ...')
                 self.listsend.insert(END, 'Login ...')
 
-            self.mail.login(self.user_gmail, self.pass_gmail)
+            self.gmail.login(self.user_gmail, self.pass_gmail)
 
             if self.first_root:
                 print('Login success')
-                self.label1.configure(text='Login success')
+                self.TextLabel('Login success')
             else:
                 print('Login success')
                 self.listsend.insert(END, 'Login success')
@@ -310,8 +375,8 @@ class Gmail:
         except Exception:
             if self.first_root:
                 print('Field to login')
-                self.label1.configure(text='Field to login')
-                messagebox.showerror(title='Error !', message='Field to login, the gmail or password incorrect')
+                self.TextLabel('Field to login')
+                messagebox.showerror(title='Error !', message='Field to login, the gmail or password are incorrect')
                 print('visit ')
                 messagebox.showinfo(title='Notice !', message='visit')  # TODO : lien to less secure apps
             else:
@@ -324,7 +389,7 @@ class Gmail:
         self.user_gmail = str(self.entry0[0].get())
         self.pass_gmail = str(self.entry0[1].get())
         self.Connect()
-        time.sleep(2)
+        # time.sleep(2)
         if self.connect:
             self.Login()
         if self.login:
@@ -389,7 +454,7 @@ class Gmail:
                                        subtype='octect-stream',
                                        filename=file_name)
 
-                self.mail.send_message(msg)
+                self.gmail.send_message(msg)
                 print(f"Message sent to : {self.staff} {receiver_email}")
                 self.listsend.insert(END, f"Message sent to : {self.staff} {receiver_email}")
                 self.listsend.see(END)
