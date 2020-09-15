@@ -7,12 +7,23 @@ import time
 import ntpath
 
 
+"""
+#### version 0.0.0.1 Beta
+
+1. getting start the project with MultiEmailSender script and change it to a GUI application
+
+2. multi testing before launching first beta version, there is couple problems here most fixing them
+
+"""
+
 def FileDirectionPDF():
     return filedialog.askopenfilenames(
         initialdir='/',
         title='Select PDF files',
         filetypes=(("Portable Document Format (.pdf)", "*.pdf"), ("All Files (*.*)", "*.*"))
-            )
+    )
+
+
 def FileDirectionCSV():
     return filedialog.askopenfilenames(
         initialdir='/',
@@ -20,9 +31,11 @@ def FileDirectionCSV():
         filetypes=(("CSV (.csv)", "*.csv"), ("All Files (*.*)", "*.*"))
     )
 
+
 def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
+
 
 class ScrolledListbox(Listbox):
     def __init__(self, master, *args, **kwargs):
@@ -91,8 +104,13 @@ class ScrolledTextbox(Text):
 
 
 class Gmail:
+    __author__ = 'Achraf Najmi'
+    __version__ = '0.0.0.1 Beta'
+    __name__ = 'Gmail'
+
     def __init__(self):
         self.win = Tk()
+        self.win.title(f'{self.__name__} v{self.__version__}')
         self.connect = False
         self.login = False
         self.first_root = False
@@ -164,7 +182,6 @@ class Gmail:
             self.frame.append(Frame(self.canvas0))
             self.frame[ol].grid(row=ol, column=0, sticky=NSEW)
 
-
         self.frame[1].rowconfigure(1, weight=1)
         self.frame[1].columnconfigure(1, weight=1)
         self.frame[2].columnconfigure(2, weight=1)
@@ -178,7 +195,7 @@ class Gmail:
         text_lbl = ['Select CSV file', 'Select PDF files']
         # buttons add files (.pdf) & (.csv)
         self.button = []
-        func_but = [self.AddCSVFiles,  self.AddPDFiles]
+        func_but = [self.AddCSVFiles, self.AddPDFiles]
         ent = 0
         for ku in range(0, 3, 2):
             self.label0.append(Label(self.frame[ku], text=text_lbl[ent]))
