@@ -10,10 +10,6 @@ Gmail has capability to send to multi mails automatically from CSV file, and get
 1. [Python :: 3.7](https://pypi.org/search/?c=Programming+Language+%3A%3A+Python+%3A%3A+3.7)
 2. [Python :: 3.8](https://pypi.org/search/?c=Programming+Language+%3A%3A+Python+%3A%3A+3.8)
 
-## Requirements Modules :: [pypi](https://pypi.org/) 
-1. [matplotlib == 3.2.0](https://pypi.org/project/matplotlib/3.2.0/)
-2. [sympy <= 1.5.1](https://pypi.org/project/sympy/1.5.1/)
-
 ## How to Run
 
 ## Release Notes
