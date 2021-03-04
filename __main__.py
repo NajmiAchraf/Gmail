@@ -6,13 +6,18 @@ import smtplib
 import pandas as pd
 import time
 import ntpath
+from concurrent import futures
+import webbrowser
 
 """
-#### version 0.0.0.2 Beta
+#### version 0.0.0.3 Beta
 
-1. setting scheme's color & organizing widgets
+- fix showing the string in widget label & widget text on GUI platform
+
+- fix the resend error when it done
+
+- add stoping of the action sending
 """
-
 
 
 def SMTPGmail():
@@ -40,6 +45,80 @@ def path_leaf(path):
     return tail or ntpath.basename(head)
 
 
+class AutoScrollbar(tk.Scrollbar):
+    """Scrollbar that automatically hides when not needed."""
+
+    def __init__(self, master=None, **kwargs):
+        """
+        Create a scrollbar.
+
+        :param master: master widget
+        :type master: widget
+        :param kwargs: options to be passed on to the :class:`ttk.Scrollbar` initializer
+        """
+        tk.Scrollbar.__init__(self, master=master, **kwargs)
+        self._pack_kw = {}
+        self._place_kw = {}
+        self._layout = 'place'
+
+    def set(self, lo, hi):
+        """
+        Set the fractional values of the slider position.
+
+        :param lo: lower end of the scrollbar (between 0 and 1)
+        :type lo: float
+        :param hi: upper end of the scrollbar (between 0 and 1)
+        :type hi: float
+        """
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            if self._layout == 'place':
+                self.place_forget()
+            elif self._layout == 'pack':
+                self.pack_forget()
+            else:
+                self.grid_remove()
+        else:
+            if self._layout == 'place':
+                self.place(**self._place_kw)
+            elif self._layout == 'pack':
+                self.pack(**self._pack_kw)
+            else:
+                self.grid()
+        tk.Scrollbar.set(self, lo, hi)
+
+    def _get_info(self, layout):
+        """Alternative to pack_info and place_info in case of bug."""
+        info = str(self.tk.call(layout, 'info', self._w)).split("-")
+        dic = {}
+        for i in info:
+            if i:
+                key, val = i.strip().split()
+                dic[key] = val
+        return dic
+
+    def place(self, **kw):
+        tk.Scrollbar.place(self, **kw)
+        try:
+            self._place_kw = self.place_info()
+        except TypeError:
+            # bug in some tkinter versions
+            self._place_kw = self._get_info("place")
+        self._layout = 'place'
+
+    def pack(self, **kw):
+        tk.Scrollbar.pack(self, **kw)
+        try:
+            self._pack_kw = self.pack_info()
+        except TypeError:
+            # bug in some tkinter versions
+            self._pack_kw = self._get_info("pack")
+        self._layout = 'pack'
+
+    def grid(self, **kw):
+        tk.Scrollbar.grid(self, **kw)
+        self._layout = 'grid'
+
+
 class HoverButton(tk.Button):
     def __init__(self, master=None, cnf=None, **kwargs):
         if cnf is None:
@@ -64,11 +143,16 @@ class ScrolledListbox(Listbox):
         self.canvas.rowconfigure(0, weight=1)
         self.canvas.columnconfigure(0, weight=1)
 
-        Listbox.__init__(self, self.canvas, *args, **kwargs)
+        self.frame = Frame(self.canvas)
+        self.frame.grid(row=0, column=0, sticky=NSEW)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+
+        Listbox.__init__(self, self.frame, *args, **kwargs)
         self.grid(row=0, column=0, sticky=NSEW)
 
-        self.vbar = Scrollbar(self.canvas, orient=VERTICAL)
-        self.hbar = Scrollbar(self.canvas, orient=HORIZONTAL)
+        self.vbar = AutoScrollbar(self.canvas, orient=VERTICAL)
+        self.hbar = AutoScrollbar(self.canvas, orient=HORIZONTAL)
 
         self.configure(xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
 
@@ -97,11 +181,16 @@ class ScrolledTextbox(Text):
         self.canvas.rowconfigure(0, weight=1)
         self.canvas.columnconfigure(0, weight=1)
 
-        Text.__init__(self, self.canvas, *args, **kwargs)
+        self.frame = Frame(self.canvas)
+        self.frame.grid(row=0, column=0, sticky=NSEW)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+
+        Text.__init__(self, self.frame, *args, **kwargs)
         self.grid(row=0, column=0, sticky=NSEW)
 
-        self.vbar = Scrollbar(self.canvas, orient=VERTICAL)
-        self.hbar = Scrollbar(self.canvas, orient=HORIZONTAL)
+        self.vbar = AutoScrollbar(self.canvas, orient=VERTICAL)
+        self.hbar = AutoScrollbar(self.canvas, orient=HORIZONTAL)
 
         self.configure(xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
 
@@ -110,11 +199,11 @@ class ScrolledTextbox(Text):
         self.hbar.grid(row=1, column=0, sticky=EW)
         self.hbar.configure(command=self.xview)
 
-        # Copy geometry methods of self.canvas without overriding Listbox
+        # Copy geometry methods of self.canvas without overriding Text
         # methods -- hack!
-        listbox_meths = vars(Listbox).keys()
+        textbox_meths = vars(Listbox).keys()
         methods = vars(Pack).keys() | vars(Grid).keys() | vars(Place).keys()
-        methods = methods.difference(listbox_meths)
+        methods = methods.difference(textbox_meths)
 
         for m in methods:
             if m[0] != '_' and m != 'config' and m != 'configure':
@@ -126,7 +215,7 @@ class ScrolledTextbox(Text):
 
 class Gmail:
     __author__ = 'Achraf Najmi'
-    __version__ = '0.0.0.2 Beta'
+    __version__ = '0.0.0.3 Beta'
     __name__ = 'Gmail'
 
     btn_prm = {'padx': 18,
@@ -150,9 +239,24 @@ class Gmail:
                'bg': 'white',
                'font': ('DejaVu Sans', 20)}
 
+    TXT = {'cnting': 'Connecting ...',
+           'cnted': 'Connected',
+           'cntf': 'Field to connect', 'check': 'check the internet connexion',
+           'login': 'Login ...',
+           'loged': 'Login success',
+           'logf': 'Field to login', 'incrt': 'the gmail or password are incorrect',
+           'halfmin': '30 seconds to reconnect',
+           'msgto': 'Message sent to :',
+           'discnt': 'Disconnect',
+           'msgtof': 'Field to send the message to',
+           'success': 'Sending Complete Successfully !!',
+           'stopped': 'The Sending is Stopped'
+           }
+
     def __init__(self):
         self.win = Tk()
 
+        self.thread_pool_executor = futures.ThreadPoolExecutor(max_workers=1)
         self.win.title(f'{self.__name__} v{self.__version__}')
 
         self.win.rowconfigure(0, weight=1)
@@ -163,6 +267,7 @@ class Gmail:
         self.connect = False
         self.login = False
         self.first_root = False
+        self.Sending = False
 
         self.frame = Frame
 
@@ -221,7 +326,8 @@ class Gmail:
             self.label0.append(Label(self.canvas, **self.lbl_prm, text=text_lbl[ent]))
             self.label0[ent].grid(row=ent, column=0)
 
-        self.button = HoverButton(self.canvas, **self.btn_prm, text="Connect", command=lambda: self.Enter())
+        self.button = HoverButton(self.canvas, **self.btn_prm, text="Connect",
+                                  command=lambda: self.thread_pool_executor.submit(self.Enter))
         self.button.grid(row=2, column=0, columnspan=2)
 
         self.label1 = Label(self.canvas, **self.lbl_prm, textvariable=self.lblvar)
@@ -290,7 +396,7 @@ class Gmail:
             self.text[ok].grid(row=1, column=1, sticky=NSEW)
 
         # send : button & listbox
-        self.buttonS = HoverButton(self.frame[3], **self.btn_prm, text='Send', command=self.RunSending)
+        self.buttonS = HoverButton(self.frame[3], **self.btn_prm, text='Send', command=lambda: self.RunSending())
         self.buttonS.grid(row=0, column=0, sticky=NSEW)
 
         self.listsend = ScrolledListbox(self.frame[3], **self.ent_prm, width=5, height=5)
@@ -303,7 +409,7 @@ class Gmail:
         try:
             self.data = pd.read_csv(self.CSVFile[0])
             self.labelcsv.configure(text=path_leaf(self.CSVFile[0]))
-            self.total = self.data.Email.count() - 1
+            self.total = self.data.Email.count()
             print(self.total)
         except IndexError:
             return print('IndexError: string index out of range')
@@ -322,97 +428,123 @@ class Gmail:
     def TextLabel(self, var):
         self.lblvar.set(var)
 
+    def ListSend(self, *elements):
+        self.listsend.insert(END, *elements)
+        self.listsend.see(END)
+
     def Connect(self):
         try:
             if self.first_root:
-                print('Connecting ...')
-                self.TextLabel('Connecting ...')
+                print(self.TXT['cnting'])
+                self.canvas.after_idle(self.TextLabel, self.TXT['cnting'])
+
             else:
-                print('Connecting ...')
-                self.listsend.insert(END, 'Connecting ...')
+                print(self.TXT['cnting'])
+                self.canvas.after_idle(self.ListSend, self.TXT['cnting'])
 
             self.gmail = SMTPGmail()
 
             if self.first_root:
-                print('Connected')
-                self.TextLabel('Connected')
+                print(self.TXT['cnted'])
+                self.canvas.after_idle(self.TextLabel, self.TXT['cnted'])
+
             else:
-                print('Connected')
-                self.listsend.insert(END, 'Connected')
-                self.listpdf.see(END)
+                print(self.TXT['cnted'])
+                self.canvas.after_idle(self.ListSend, self.TXT['cnted'])
 
             self.connect = True
+
         except Exception:
             if self.first_root:
-                self.TextLabel('Field to connect')
-                print('Field to connect, check the internet connexion')
-                messagebox.showwarning(title='Warning!', message='Field to connect, check the internet connexion')
+                self.canvas.after_idle(self.TextLabel, self.TXT['cntf'])
+                print(f"{self.TXT['cntf']}, {self.TXT['check']}")
+                messagebox.showwarning(title='Warning!', message=f"{self.TXT['cntf']}, {self.TXT['check']}")
+
             else:
-                print('Field to connect, check the internet connexion')
-                self.listsend.insert(END, 'Field to connect, check the internet connexion')
-                self.listpdf.see(END)
+                print(f"{self.TXT['cntf']}, {self.TXT['check']}")
+                self.canvas.after_idle(self.ListSend, f"{self.TXT['cntf']}, {self.TXT['check']}")
+
             self.connect = False
 
     def Login(self):
         try:
             if self.first_root:
-                print('Login ...')
-                self.TextLabel('Login ...')
+                print(self.TXT['login'])
+                self.canvas.after_idle(self.TextLabel, self.TXT['login'])
+
             else:
-                print('Login ...')
-                self.listsend.insert(END, 'Login ...')
+                print(self.TXT['login'])
+                self.canvas.after_idle(self.listsend.insert, END, self.TXT['login'])
 
             self.gmail.login(self.user_gmail, self.pass_gmail)
 
             if self.first_root:
-                print('Login success')
-                self.TextLabel('Login success')
+                print(self.TXT['loged'])
+                self.canvas.after_idle(self.TextLabel, self.TXT['loged'])
+
             else:
-                print('Login success')
-                self.listsend.insert(END, 'Login success')
-                self.listsend.see(END)
+                print(self.TXT['loged'])
+                self.canvas.after_idle(self.ListSend, self.TXT['loged'])
             self.login = True
+
         except Exception:
             if self.first_root:
-                print('Field to login')
-                self.TextLabel('Field to login')
-                messagebox.showerror(title='Error !', message='Field to login, the gmail or password are incorrect')
-                print('visit ')
-                messagebox.showinfo(title='Notice !', message='visit')  # TODO : lien to less secure apps
+                print(self.TXT['logf'])
+                self.canvas.after_idle(self.TextLabel, self.TXT['logf'])
+                messagebox.showerror(title='Error !', message=f"{self.TXT['logf']}, {self.TXT['incrt']}")
+
+                print('visit : https://myaccount.google.com/lesssecureapps')
+                MsgBox = messagebox.askquestion('Open Browser', 'visit theose web sites to get access to your email :'
+                                                                '\nGmail : https://myaccount.google.com/lesssecureapps')
+                # '\nOutlook : https://outlook.live.com/mail/0/options/mail/accounts/popImap')
+                if MsgBox == 'yes':
+                    webbrowser.open_new("https://myaccount.google.com/lesssecureapps")
+                else:
+                    pass
+
             else:
-                print('Field to login, Error !')
-                self.listsend.insert(END, 'Field to login, Error !')
-                self.listsend.see(END)
+                print(self.TXT['cntf'])
+                print(self.TXT['halfmin'])
+                self.canvas.after_idle(self.ListSend, self.TXT['cntf'], self.TXT['halfmin'])
+                self.canvas.after_idle(self.ListSend, "0s")
+                for tm in range(30):
+                    if not self.Sending:
+                        break
+                    label = f"{tm}s"
+                    idx = self.listsend.get(0, tk.END)
+                    idx = idx.index(label)
+                    self.canvas.after_idle(self.listsend.delete, idx)
+                    print(f"{tm + 1}s", end=' ')
+                    self.canvas.after_idle(self.ListSend, f"{tm + 1}s")
+                    time.sleep(1)
             self.login = False
 
     def Enter(self):
         self.user_gmail = str(self.entry0[0].get())
         self.pass_gmail = str(self.entry0[1].get())
         self.Connect()
-        # time.sleep(2)
+        time.sleep(2)
+
         if self.connect:
             self.Login()
+
         if self.login:
             self.Second_Mainloop()
 
     def Reconnect(self):
-        try:
-            self.Connect()
-            # sleep to establish the connection
-            time.sleep(2)
-            self.Login()
-            # continue sending
-            self.Send()
-        except Exception:
-            print('Field to connect')
-            print('1 minute to reconnect')
-            self.listsend.insert(END, 'Field to connect',
-                                 '1 minute to reconnect')
-            self.listsend.see(END)
-            time.sleep(60)
-            self.Reconnect()
+        self.Connect()
+        # sleep to establish the connection
+        time.sleep(2)
+        self.Login()
+        if not self.Sending:
+            return self.ShowStopInfo()
+        if not self.login:
+            return self.Reconnect()
+        # continue sending
+        return self.Send()
 
     def RunSending(self):
+        self.count = 0
         self.listsend.delete(0, END)
         self.Subject = str(self.entry0[0].get())
         self.Message = self.text[0].get(1.0, END)
@@ -421,22 +553,33 @@ class Gmail:
         self.listpdf.configure(state='disabled')
         for ml in range(2):
             self.button[ml].configure(state='disabled')
-        self.buttonS.configure(text='Stop', command=self.Stopending)
-        self.Send()
+        self.buttonS.configure(text='Stop', command=lambda: self.EndSending())
+        self.Sending = True
+        self.thread_pool_executor.submit(self.Send)
 
-    def Stopending(self):
-        self.Subject = str(self.entry0[0].get())
-        self.Message = self.text[0].get(1.0, END)
+    def EndSending(self):
         self.entry0[0].configure(state='normal')
         self.text[0].configure(state='normal')
         self.listpdf.configure(state='normal')
         for ml in range(2):
             self.button[ml].configure(state='normal')
-        self.buttonS.configure(text='Send', command=self.RunSending)
+        self.buttonS.configure(text='Send', command=lambda: self.RunSending())
+        self.Sending = False
+
+    def ShowStopInfo(self):
+        print(self.TXT['stopped'])
+        self.canvas.after_idle(self.ListSend, self.TXT['stopped'])
+        messagebox.showinfo(title='Stop !', message=self.TXT['stopped'])
 
     def Send(self):
+        sending_error = False
+
         for self.staff in range(self.count, self.total):
+            if not self.Sending:
+                break
+
             receiver_email = self.data.iloc[self.staff, 0]
+
             try:
                 msg = EmailMessage()
                 msg['Subject'] = self.Subject
@@ -445,9 +588,9 @@ class Gmail:
                 msg.set_content(self.Message)
 
                 for file in self.PDFiles:
+                    file_name = path_leaf(file)
                     with open(file, 'rb') as f:
                         file_data = f.read()
-                        file_name = f.name
 
                     msg.add_attachment(file_data,
                                        maintype='application',
@@ -455,22 +598,32 @@ class Gmail:
                                        filename=file_name)
 
                 self.gmail.send_message(msg)
-                print(f"Message sent to : {self.staff} {receiver_email}")
-                self.listsend.insert(END, f"Message sent to : {self.staff} {receiver_email}")
-                self.listsend.see(END)
+
+                print(f"{self.staff + 1} {self.TXT['msgto']} {receiver_email}")
+                self.canvas.after_idle(self.ListSend, f"{self.staff + 1} {self.TXT['msgto']} {receiver_email}")
+
             except Exception:
                 self.count = self.staff
-                print('Disconnect')
-                print('Field to send the message to', self.count, receiver_email)
-                self.listsend.insert(END, 'Disconnect',
-                                     'Field to send the message to')
-                self.listsend.see(END)
-                self.Reconnect()
-        print('Sending Complete Successfully !!')
-        self.listsend.insert(END, 'Sending Complete Successfully !!')
-        self.listsend.see(END)
-        return messagebox.showinfo(title='Congratulation !', message='Sending Complete Successfully !!'), \
-               self.Second_Mainloop()
+
+                print(self.TXT['discnt'])
+                print(self.TXT['msgtof'], self.count, receiver_email)
+                self.canvas.after_idle(self.ListSend, self.TXT['discnt'],
+                                       f"{self.TXT['msgtof']} {self.count + 1} {receiver_email}")
+                sending_error = True
+                break
+            if self.total == (self.staff + 1) or not self.Sending:
+                break
+
+        if sending_error and self.Sending:
+            return self.Reconnect()
+        elif not sending_error and not self.Sending:
+            return  self.ShowStopInfo()
+        else:
+            print(self.TXT['success'])
+            self.canvas.after_idle(self.ListSend, self.TXT['success'])
+            messagebox.showinfo(title='Congratulation !', message=self.TXT['success'])
+            return  self.EndSending()
+
 
 
 if __name__ == '__main__':
