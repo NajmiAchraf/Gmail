@@ -42,4 +42,8 @@ C:\WINDOWS\system32>python C:\ ... \Gmail-master\__main__.py
 
 - fix the resend error when it done
 
-- add stoping of the action sending
+- add stopping of the action sending
+
+#### version 0.0.0.4 RC
+
+- add button to delete PDF file from listbox
