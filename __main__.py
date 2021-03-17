@@ -10,13 +10,9 @@ from concurrent import futures
 import webbrowser
 
 """
-#### version 0.0.0.3 Beta
+#### version 0.0.0.4 RC
 
-- fix showing the string in widget label & widget text on GUI platform
-
-- fix the resend error when it done
-
-- add stoping of the action sending
+- add button to delete PDF file from listbox
 """
 
 
@@ -214,8 +210,8 @@ class ScrolledTextbox(Text):
 
 
 class Gmail:
-    __author__ = 'Achraf Najmi'
-    __version__ = '0.0.0.3 Beta'
+    __author__ = 'DeepEastWind'
+    __version__ = '0.0.0.4 RC'
     __name__ = 'Gmail'
 
     btn_prm = {'padx': 18,
@@ -359,10 +355,10 @@ class Gmail:
 
         # CSV & PDF label
         self.label0 = []
-        text_lbl = ['CSV file', 'PDF files']
+        text_lbl = ['CSV file', 'Add PDF files', 'Delete PDF file']
         # buttons add files (.pdf) & (.csv)
         self.button = []
-        func_but = [self.AddCSVFiles, self.AddPDFiles]
+        func_but = [self.AddCSVFiles, self.AddPDFiles, self.DeletePDFiles]
         ent = 0
         for ku in range(0, 3, 2):
             self.label0.append(Label(self.frame[ku], **self.lbl_prm, text=text_lbl[ent]))
@@ -371,14 +367,19 @@ class Gmail:
             self.button[ent].grid(row=0, column=1)
             ent += 1
 
+        # button delete file (.pdf)
+        self.label0.append(Label(self.frame[2], **self.lbl_prm, text=text_lbl[2]))
+        self.label0[2].grid(row=1, column=0, sticky=NSEW)
+        self.button.append(HoverButton(self.frame[2], **self.btn_prm, text="Click", command=func_but[2]))
+        self.button[2].grid(row=1, column=1)
+
         # label for imported CSV's file
         self.labelcsv = Label(self.frame[0], **self.lbl_prm)
         self.labelcsv.grid(row=0, column=2)
         # listbox for imported PDF's files
         self.listpdf = ScrolledListbox(self.frame[2], **self.ent_prm, width=5, height=5)
-        self.listpdf.grid(row=0, column=2, sticky=NSEW)
-        # TODO delete files (.pdf) button
-        #######
+        self.listpdf.grid(row=0, column=2, rowspan=2, sticky=NSEW)
+
         # object label & entry, message label & text
         self.label1 = []
         text_lbl = ['Object :', 'Message :']
@@ -424,6 +425,17 @@ class Gmail:
                 self.listpdf.insert(END, path_leaf(DirePDFiles[dr]))
         self.listpdf.see(END)
         print(self.PDFiles)
+
+    def DeletePDFiles(self):
+        try:
+            # Delete from Listbox
+            selection = self.listpdf.curselection()
+            self.listpdf.delete(selection[0])
+            # Delete from list that provided it
+            self.PDFiles.pop(selection[0])
+            print(self.PDFiles)
+        except Exception:
+            print("error")
 
     def TextLabel(self, var):
         self.lblvar.set(var)
@@ -551,7 +563,7 @@ class Gmail:
         self.entry0[0].configure(state='disabled')
         self.text[0].configure(state='disabled')
         self.listpdf.configure(state='disabled')
-        for ml in range(2):
+        for ml in range(3):
             self.button[ml].configure(state='disabled')
         self.buttonS.configure(text='Stop', command=lambda: self.EndSending())
         self.Sending = True
@@ -561,7 +573,7 @@ class Gmail:
         self.entry0[0].configure(state='normal')
         self.text[0].configure(state='normal')
         self.listpdf.configure(state='normal')
-        for ml in range(2):
+        for ml in range(3):
             self.button[ml].configure(state='normal')
         self.buttonS.configure(text='Send', command=lambda: self.RunSending())
         self.Sending = False
