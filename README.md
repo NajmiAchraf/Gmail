@@ -11,7 +11,7 @@ Gmail has capability to send to multi mails automatically from CSV file, and get
 2. [Python :: 3.8](https://pypi.org/search/?c=Programming+Language+%3A%3A+Python+%3A%3A+3.8)
 
 ## How to Run
-### [Download The Last Commit in Gmail Repository File .zip](https://github.com/DeepEastWind/Gmail/archive/master.zip)
+### [Download The Last Commit in Gmail Repository File .zip](https://github.com/NajmiAchraf/Gmail/archive/master.zip)
 ### Font Installation
 
 For good writing quality install font `DejaVuSans.ttf`
@@ -47,3 +47,7 @@ C:\WINDOWS\system32>python C:\ ... \Gmail-master\__main__.py
 #### version 0.0.0.4 RC
 
 - add button to delete PDF file from listbox
+
+#### version 0.0.0.5 FV
+
+- switch from old GUI settings to new one

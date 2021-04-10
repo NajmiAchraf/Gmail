@@ -10,9 +10,9 @@ from concurrent import futures
 import webbrowser
 
 """
-#### version 0.0.0.4 RC
+#### version 0.0.0.5 FV
 
-- add button to delete PDF file from listbox
+- switch from old GUI settings to new one
 """
 
 
@@ -21,19 +21,29 @@ def SMTPGmail():
 
 
 def FileDirectionPDF():
-    return filedialog.askopenfilenames(
+    file = filedialog.askopenfilenames(
         initialdir='/',
         title='Select PDF files',
         filetypes=(("Portable Document Format (.pdf)", "*.pdf"), ("All Files (*.*)", "*.*"))
     )
+    form = file[0][-3:].lower()
+    if form == 'pdf':
+        return file
+    else:
+        return None
 
 
 def FileDirectionCSV():
-    return filedialog.askopenfilenames(
+    file = filedialog.askopenfilenames(
         initialdir='/',
         title='Select CSV file',
         filetypes=(("CSV (.csv)", "*.csv"), ("All Files (*.*)", "*.*"))
     )
+    form = file[0][-3:].lower()
+    if form == 'csv':
+        return file
+    else:
+        return None
 
 
 def path_leaf(path):
@@ -210,8 +220,8 @@ class ScrolledTextbox(Text):
 
 
 class Gmail:
-    __author__ = 'DeepEastWind'
-    __version__ = '0.0.0.4 RC'
+    __author__ = 'Najmi Achraf'
+    __version__ = '0.0.0.5 FV'
     __name__ = 'Gmail'
 
     btn_prm = {'padx': 18,
@@ -258,7 +268,7 @@ class Gmail:
         self.win.rowconfigure(0, weight=1)
         self.win.columnconfigure(0, weight=1)
 
-        self.canvas = Canvas(self.win)
+        # self.canvas = Canvas(self.win)
 
         self.connect = False
         self.login = False
@@ -267,13 +277,14 @@ class Gmail:
 
         self.frame = Frame
 
-        self.button = HoverButton
+        self.buttons = HoverButton
         self.buttonS = HoverButton
         self.listpdf = ScrolledListbox
         self.listsend = ScrolledListbox
-        self.entry0 = Entry
-        self.label0 = Label
+        self.entry1 = Entry
+        self.entry2 = Entry
         self.label1 = Label
+        self.label2 = Label
         self.text = ScrolledTextbox
         self.lblvar = StringVar()
 
@@ -293,56 +304,51 @@ class Gmail:
         except Exception:
             pass
 
-        self.First_Mainloop()
+        # self.First_Mainloop()-----------------------------------------------------------------------------------------
+        self.canvas1 = Canvas(self.win)
 
-        self.win.mainloop()
+        self.canvas1.grid(row=0, column=0, sticky=NSEW)
 
-    def First_Mainloop(self):
-        self.canvas.destroy()
-        self.canvas = Canvas(self.win)
-
-        self.canvas.grid(row=0, column=0, sticky=NSEW)
-
-        self.canvas.rowconfigure(0, weight=4)
-        self.canvas.rowconfigure(1, weight=4)
-        self.canvas.rowconfigure(2, weight=4)
-        self.canvas.rowconfigure(3, weight=4)
-        self.canvas.columnconfigure(0, weight=1)
-        self.canvas.columnconfigure(1, weight=4)
-
-        self.lblvar = StringVar()
+        self.canvas1.rowconfigure(0, weight=4)
+        self.canvas1.rowconfigure(1, weight=4)
+        self.canvas1.rowconfigure(2, weight=4)
+        self.canvas1.rowconfigure(3, weight=4)
+        self.canvas1.columnconfigure(0, weight=1)
+        self.canvas1.columnconfigure(1, weight=4)
 
         self.CSVFile = []
-        self.entry0 = []
-        self.label0 = []
+        self.entry1 = []
+        self.label1 = []
         text_lbl = ['Gmail :', 'Password :']
         for ent in range(2):
-            self.entry0.append(Entry(self.canvas, **self.ent_prm))
-            self.entry0[ent].grid(row=ent, column=1)
-            self.label0.append(Label(self.canvas, **self.lbl_prm, text=text_lbl[ent]))
-            self.label0[ent].grid(row=ent, column=0)
+            self.entry1.append(Entry(self.canvas1, **self.ent_prm))
+            self.entry1[ent].grid(row=ent, column=1)
+            self.label1.append(Label(self.canvas1, **self.lbl_prm, text=text_lbl[ent]))
+            self.label1[ent].grid(row=ent, column=0)
 
-        self.button = HoverButton(self.canvas, **self.btn_prm, text="Connect",
+        self.button = HoverButton(self.canvas1, **self.btn_prm, text="Connect",
                                   command=lambda: self.thread_pool_executor.submit(self.Enter))
+                                  # command=lambda: self.Enter())
         self.button.grid(row=2, column=0, columnspan=2)
 
-        self.label1 = Label(self.canvas, **self.lbl_prm, textvariable=self.lblvar)
+        self.label1 = Label(self.canvas1, **self.lbl_prm, textvariable=self.lblvar)
         self.label1.grid(row=3, column=0, columnspan=2)
         self.first_root = True
 
-    def Second_Mainloop(self):
-        self.canvas.destroy()
-        self.canvas = Canvas(self.win)
+        # self.Second_Mainloop()----------------------------------------------------------------------------------------
+        self.canvas2 = Canvas(self.win)
 
-        self.canvas.grid(row=0, column=0, sticky=NSEW)
+        self.canvas2.grid(row=0, column=0, sticky=NSEW)
 
-        self.canvas.columnconfigure(0, weight=1)
-        self.canvas.columnconfigure(1, weight=1)
-        self.canvas.rowconfigure(1, weight=1)
+        self.canvas2.columnconfigure(0, weight=1)
+        self.canvas2.columnconfigure(1, weight=1)
+        self.canvas2.rowconfigure(1, weight=1)
+
+        self.canvas2.grid_forget()
 
         self.frame = []
         for ol in range(4):
-            self.frame.append(Frame(self.canvas))
+            self.frame.append(Frame(self.canvas2))
             self.frame[ol].grid(row=ol, column=0, sticky=NSEW)
 
         self.frame[1].rowconfigure(1, weight=1)
@@ -354,24 +360,24 @@ class Gmail:
         self.frame[3].columnconfigure(1, weight=1)
 
         # CSV & PDF label
-        self.label0 = []
-        text_lbl = ['CSV file', 'Add PDF files', 'Delete PDF file']
+        self.label2 = []
+        text_lbl = ['CSV file (Email Column)', 'Add PDF files', 'Delete PDF file']
         # buttons add files (.pdf) & (.csv)
-        self.button = []
+        self.buttons = []
         func_but = [self.AddCSVFiles, self.AddPDFiles, self.DeletePDFiles]
         ent = 0
         for ku in range(0, 3, 2):
-            self.label0.append(Label(self.frame[ku], **self.lbl_prm, text=text_lbl[ent]))
-            self.label0[ent].grid(row=0, column=0, sticky=NSEW)
-            self.button.append(HoverButton(self.frame[ku], **self.btn_prm, text="Click", command=func_but[ent]))
-            self.button[ent].grid(row=0, column=1)
+            self.label2.append(Label(self.frame[ku], **self.lbl_prm, text=text_lbl[ent]))
+            self.label2[ent].grid(row=0, column=0, sticky=NSEW)
+            self.buttons.append(HoverButton(self.frame[ku], **self.btn_prm, text="Click", command=func_but[ent]))
+            self.buttons[ent].grid(row=0, column=1)
             ent += 1
 
         # button delete file (.pdf)
-        self.label0.append(Label(self.frame[2], **self.lbl_prm, text=text_lbl[2]))
-        self.label0[2].grid(row=1, column=0, sticky=NSEW)
-        self.button.append(HoverButton(self.frame[2], **self.btn_prm, text="Click", command=func_but[2]))
-        self.button[2].grid(row=1, column=1)
+        self.label2.append(Label(self.frame[2], **self.lbl_prm, text=text_lbl[2]))
+        self.label2[2].grid(row=1, column=0, sticky=NSEW)
+        self.buttons.append(HoverButton(self.frame[2], **self.btn_prm, text="Click", command=func_but[2]))
+        self.buttons[2].grid(row=1, column=1)
 
         # label for imported CSV's file
         self.labelcsv = Label(self.frame[0], **self.lbl_prm)
@@ -381,17 +387,17 @@ class Gmail:
         self.listpdf.grid(row=0, column=2, rowspan=2, sticky=NSEW)
 
         # object label & entry, message label & text
-        self.label1 = []
+        self.label2 = []
         text_lbl = ['Object :', 'Message :']
         for ko in range(2):
-            self.label1.append(Label(self.frame[1], **self.lbl_prm, text=text_lbl[ko]))
-            self.label1[ko].grid(row=ko, column=0, sticky=NSEW)
+            self.label2.append(Label(self.frame[1], **self.lbl_prm, text=text_lbl[ko]))
+            self.label2[ko].grid(row=ko, column=0, sticky=NSEW)
 
-        self.entry0 = []
+        self.entry2 = []
         self.text = []
         for ok in range(1):
-            self.entry0.append(Entry(self.frame[1], **self.ent_prm))
-            self.entry0[ok].grid(row=0, column=1, sticky=NSEW)
+            self.entry2.append(Entry(self.frame[1], **self.ent_prm))
+            self.entry2[ok].grid(row=0, column=1, sticky=NSEW)
 
             self.text.append(ScrolledTextbox(self.frame[1], **self.ent_prm, width=5, height=5))
             self.text[ok].grid(row=1, column=1, sticky=NSEW)
@@ -403,28 +409,46 @@ class Gmail:
         self.listsend = ScrolledListbox(self.frame[3], **self.ent_prm, width=5, height=5)
         self.listsend.grid(row=0, column=1, sticky=NSEW)
 
+        self.win.mainloop()
+
+    # def First_Mainloop(self):
+
+    def Second_Mainloop(self):
+        self.canvas1.grid_forget()
+
+        self.canvas2.grid(row=0, column=0, sticky=NSEW)
+        self.canvas2.columnconfigure(0, weight=1)
+        self.canvas2.columnconfigure(1, weight=1)
+        self.canvas2.rowconfigure(1, weight=1)
+
         self.first_root = False
 
     def AddCSVFiles(self):
         self.CSVFile = FileDirectionCSV()
-        try:
-            self.data = pd.read_csv(self.CSVFile[0])
-            self.labelcsv.configure(text=path_leaf(self.CSVFile[0]))
-            self.total = self.data.Email.count()
-            print(self.total)
-        except IndexError:
-            return print('IndexError: string index out of range')
-        print(self.CSVFile)
+        if self.CSVFile is None:
+            pass
+        else:
+            try:
+                self.data = pd.read_csv(self.CSVFile[0])
+                self.total = self.data.Email.count()
+                print(self.total)
+                self.labelcsv.configure(text=f"{path_leaf(self.CSVFile[0])} \ Emails : {self.total}")
+            except IndexError:
+                return print('IndexError: string index out of range')
+            print(self.CSVFile)
 
     def AddPDFiles(self):
         DirePDFiles = FileDirectionPDF()
-        print(DirePDFiles)
-        for dr in range(len(DirePDFiles)):
-            if DirePDFiles[dr] not in self.PDFiles:
-                self.PDFiles.append(DirePDFiles[dr])
-                self.listpdf.insert(END, path_leaf(DirePDFiles[dr]))
-        self.listpdf.see(END)
-        print(self.PDFiles)
+        if DirePDFiles is None:
+            pass
+        else:
+            print(DirePDFiles)
+            for dr in range(len(DirePDFiles)):
+                if DirePDFiles[dr] not in self.PDFiles:
+                    self.PDFiles.append(DirePDFiles[dr])
+                    self.listpdf.insert(END, path_leaf(DirePDFiles[dr]))
+            self.listpdf.see(END)
+            print(self.PDFiles)
 
     def DeletePDFiles(self):
         try:
@@ -448,33 +472,33 @@ class Gmail:
         try:
             if self.first_root:
                 print(self.TXT['cnting'])
-                self.canvas.after_idle(self.TextLabel, self.TXT['cnting'])
+                self.canvas1.after_idle(self.TextLabel, self.TXT['cnting'])
 
             else:
                 print(self.TXT['cnting'])
-                self.canvas.after_idle(self.ListSend, self.TXT['cnting'])
+                self.canvas2.after_idle(self.ListSend, self.TXT['cnting'])
 
             self.gmail = SMTPGmail()
 
             if self.first_root:
                 print(self.TXT['cnted'])
-                self.canvas.after_idle(self.TextLabel, self.TXT['cnted'])
+                self.canvas1.after_idle(self.TextLabel, self.TXT['cnted'])
 
             else:
                 print(self.TXT['cnted'])
-                self.canvas.after_idle(self.ListSend, self.TXT['cnted'])
+                self.canvas2.after_idle(self.ListSend, self.TXT['cnted'])
 
             self.connect = True
 
         except Exception:
             if self.first_root:
-                self.canvas.after_idle(self.TextLabel, self.TXT['cntf'])
+                self.canvas1.after_idle(self.TextLabel, self.TXT['cntf'])
                 print(f"{self.TXT['cntf']}, {self.TXT['check']}")
                 messagebox.showwarning(title='Warning!', message=f"{self.TXT['cntf']}, {self.TXT['check']}")
 
             else:
                 print(f"{self.TXT['cntf']}, {self.TXT['check']}")
-                self.canvas.after_idle(self.ListSend, f"{self.TXT['cntf']}, {self.TXT['check']}")
+                self.canvas2.after_idle(self.ListSend, f"{self.TXT['cntf']}, {self.TXT['check']}")
 
             self.connect = False
 
@@ -482,27 +506,27 @@ class Gmail:
         try:
             if self.first_root:
                 print(self.TXT['login'])
-                self.canvas.after_idle(self.TextLabel, self.TXT['login'])
+                self.canvas1.after_idle(self.TextLabel, self.TXT['login'])
 
             else:
                 print(self.TXT['login'])
-                self.canvas.after_idle(self.listsend.insert, END, self.TXT['login'])
+                self.canvas2.after_idle(self.listsend.insert, END, self.TXT['login'])
 
             self.gmail.login(self.user_gmail, self.pass_gmail)
 
             if self.first_root:
                 print(self.TXT['loged'])
-                self.canvas.after_idle(self.TextLabel, self.TXT['loged'])
+                self.canvas1.after_idle(self.TextLabel, self.TXT['loged'])
 
             else:
                 print(self.TXT['loged'])
-                self.canvas.after_idle(self.ListSend, self.TXT['loged'])
+                self.canvas2.after_idle(self.ListSend, self.TXT['loged'])
             self.login = True
 
         except Exception:
             if self.first_root:
                 print(self.TXT['logf'])
-                self.canvas.after_idle(self.TextLabel, self.TXT['logf'])
+                self.canvas1.after_idle(self.TextLabel, self.TXT['logf'])
                 messagebox.showerror(title='Error !', message=f"{self.TXT['logf']}, {self.TXT['incrt']}")
 
                 print('visit : https://myaccount.google.com/lesssecureapps')
@@ -517,23 +541,23 @@ class Gmail:
             else:
                 print(self.TXT['cntf'])
                 print(self.TXT['halfmin'])
-                self.canvas.after_idle(self.ListSend, self.TXT['cntf'], self.TXT['halfmin'])
-                self.canvas.after_idle(self.ListSend, "0s")
+                self.canvas2.after_idle(self.ListSend, self.TXT['cntf'], self.TXT['halfmin'])
+                self.canvas2.after_idle(self.ListSend, "0s")
                 for tm in range(30):
                     if not self.Sending:
                         break
                     label = f"{tm}s"
                     idx = self.listsend.get(0, tk.END)
                     idx = idx.index(label)
-                    self.canvas.after_idle(self.listsend.delete, idx)
+                    self.canvas2.after_idle(self.listsend.delete, idx)
                     print(f"{tm + 1}s", end=' ')
-                    self.canvas.after_idle(self.ListSend, f"{tm + 1}s")
+                    self.canvas2.after_idle(self.ListSend, f"{tm + 1}s")
                     time.sleep(1)
             self.login = False
 
     def Enter(self):
-        self.user_gmail = str(self.entry0[0].get())
-        self.pass_gmail = str(self.entry0[1].get())
+        self.user_gmail = str(self.entry1[0].get())
+        self.pass_gmail = str(self.entry1[1].get())
         self.Connect()
         time.sleep(2)
 
@@ -558,29 +582,29 @@ class Gmail:
     def RunSending(self):
         self.count = 0
         self.listsend.delete(0, END)
-        self.Subject = str(self.entry0[0].get())
+        self.Subject = str(self.entry2[0].get())
         self.Message = self.text[0].get(1.0, END)
-        self.entry0[0].configure(state='disabled')
+        self.entry2[0].configure(state='disabled')
         self.text[0].configure(state='disabled')
         self.listpdf.configure(state='disabled')
         for ml in range(3):
-            self.button[ml].configure(state='disabled')
+            self.buttons[ml].configure(state='disabled')
         self.buttonS.configure(text='Stop', command=lambda: self.EndSending())
         self.Sending = True
         self.thread_pool_executor.submit(self.Send)
 
     def EndSending(self):
-        self.entry0[0].configure(state='normal')
+        self.entry2[0].configure(state='normal')
         self.text[0].configure(state='normal')
         self.listpdf.configure(state='normal')
         for ml in range(3):
-            self.button[ml].configure(state='normal')
+            self.buttons[ml].configure(state='normal')
         self.buttonS.configure(text='Send', command=lambda: self.RunSending())
         self.Sending = False
 
     def ShowStopInfo(self):
         print(self.TXT['stopped'])
-        self.canvas.after_idle(self.ListSend, self.TXT['stopped'])
+        self.canvas2.after_idle(self.ListSend, self.TXT['stopped'])
         messagebox.showinfo(title='Stop !', message=self.TXT['stopped'])
 
     def Send(self):
@@ -612,15 +636,15 @@ class Gmail:
                 self.gmail.send_message(msg)
 
                 print(f"{self.staff + 1} {self.TXT['msgto']} {receiver_email}")
-                self.canvas.after_idle(self.ListSend, f"{self.staff + 1} {self.TXT['msgto']} {receiver_email}")
+                self.canvas2.after_idle(self.ListSend, f"{self.staff + 1} {self.TXT['msgto']} {receiver_email}")
 
             except Exception:
                 self.count = self.staff
 
                 print(self.TXT['discnt'])
                 print(self.TXT['msgtof'], self.count, receiver_email)
-                self.canvas.after_idle(self.ListSend, self.TXT['discnt'],
-                                       f"{self.TXT['msgtof']} {self.count + 1} {receiver_email}")
+                self.canvas2.after_idle(self.ListSend, self.TXT['discnt'],
+                                        f"{self.TXT['msgtof']} {self.count + 1} {receiver_email}")
                 sending_error = True
                 break
             if self.total == (self.staff + 1) or not self.Sending:
@@ -629,13 +653,12 @@ class Gmail:
         if sending_error and self.Sending:
             return self.Reconnect()
         elif not sending_error and not self.Sending:
-            return  self.ShowStopInfo()
+            return self.ShowStopInfo()
         else:
             print(self.TXT['success'])
-            self.canvas.after_idle(self.ListSend, self.TXT['success'])
+            self.canvas2.after_idle(self.ListSend, self.TXT['success'])
             messagebox.showinfo(title='Congratulation !', message=self.TXT['success'])
-            return  self.EndSending()
-
+            return self.EndSending()
 
 
 if __name__ == '__main__':
