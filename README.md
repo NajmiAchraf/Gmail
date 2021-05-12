@@ -51,3 +51,11 @@ C:\WINDOWS\system32>python C:\ ... \Gmail-master\__main__.py
 #### version 0.0.0.5 FV
 
 - switch from old GUI settings to new one
+
+#### version 0.1.0.1 beta
+
+- fix adding files empty
+
+- add auto fill up the account gmail and password after success sign up
+
+- fix button delete : activate when file is selected
