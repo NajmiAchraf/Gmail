@@ -59,3 +59,16 @@ C:\WINDOWS\system32>python C:\ ... \Gmail-master\__main__.py
 - add auto fill up the account gmail and password after success sign up
 
 - fix button delete : activate when file is selected
+
+#### version 0.1.0.2 beta
+
+- fix the click of the send button without adding the attached files
+
+- fix bug of adding CSV files not containing email as column list name
+
+- redesign the entire interface with all its widgets
+
+- add two buttons to switching to the main menu:
+    - disconnect : get disconnected from the account without delete the Gmail and Password
+    
+    - log out : get disconnected and logged out from the account with deleting the Gmail and Password
