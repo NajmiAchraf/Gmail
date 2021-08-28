@@ -1,5 +1,5 @@
 # Gmail
-Introducing CSV Google-mail Sender
+Introducing CSV Google-mail Sender Anti-Spam
 
 ## Summary
 Gmail has capability to send to multi mails automatically from CSV file, and get stitch multiple PDF files to the mail. 
@@ -72,3 +72,9 @@ C:\WINDOWS\system32>python C:\ ... \Gmail-master\__main__.py
     - disconnect : get disconnected from the account without delete the Gmail and Password
     
     - log out : get disconnected and logged out from the account with deleting the Gmail and Password
+    
+#### version 0.1.0.3 FV
+
+- add new icons symbolize each button in the app
+
+- add user Gmail login
